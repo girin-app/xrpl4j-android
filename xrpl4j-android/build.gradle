@@ -1,0 +1,86 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'maven-publish'
+}
+group = 'com.github.girin-app'
+
+android {
+    compileSdk 34
+    namespace = "app.girin.xrpl4j"
+
+    defaultConfig {
+        minSdk 28
+        targetSdk 34
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+task publishSdk(group: 'build') {
+    dependsOn 'clean', 'assembleRelease'
+    println 'publish release sdk..'
+
+    doLast {
+        delete 'release'
+        copy {
+            from('build/outputs/aar') {
+                include '*-release.aar'
+            }
+            into 'release'
+        }
+    }
+}
+
+dependencies {
+    api("org.xrpl:xrpl4j-core:4.0.2"){
+        exclude(group: "org.bouncycastle")
+    }
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    api("org.bitcoinj:bitcoinj-core:0.16.3")
+
+    //retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-jackson:2.9.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.14.2")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.14.2")
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+    implementation 'androidx.annotation:annotation:1.5.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.girin-app'
+                artifactId = 'xrpl4j-android'
+                version = '0.0.1'
+            }
+        }
+    }
+}
